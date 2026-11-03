@@ -1,47 +1,26 @@
+<!-- قسم الحاسبة المطورة -->
+<section class="card">
+    <h2>🧮 حاسبة التحميم الذكية</h2>
+    
+    <label>نوع الغاز:</label>
+    <select id="gasType" onchange="updatePressureUnits()">
+        <option value="R410a">R410a (المكيفات الحديثة)</option>
+        <option value="R32">R32 (المكيفات الجديدة)</option>
+        <option value="R22">R22 (القديم)</option>
+    </select>
 
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعد التبريد الذكي</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <header>
-        <h1>❄️ مساعد التبريد والتكييف</h1>
-    </header>
+    <label>ضغط السحب (Suction Pressure):</label>
+    <div style="display: flex; gap: 10px;">
+        <input type="number" id="pressureValue" placeholder="أدخل الضغط" style="flex: 2;">
+        <select id="pressureUnit" style="flex: 1;">
+            <option value="bar">Bar</option>
+            <option value="psi">PSI</option>
+        </select>
+    </div>
 
-    <main>
-        <!-- قسم تشخيص الأعطال -->
-        <section class="card">
-            <h2>🛠️ تشخيص سريع</h2>
-            <p>اختر العَرَض الذي تواجهه:</p>
-            <select id="symptomSelect">
-                <option value="">-- اختر العَرَض --</option>
-                <option value="frost">صقيع (ثلج) على أنابيب المبخر</option>
-                <option value="lowCooling">تبريد ضعيف جداً</option>
-                <option value="highPressure">ضغط الطرد (High) مرتفع جداً</option>
-                <option value="compressorOff">الضاغط لا يعمل</option>
-            </select>
-            <div id="diagnosisResult" class="result-box"></div>
-        </section>
-
-        <!-- قسم الحاسبة -->
-        <section class="card">
-            <h2>🧮 حاسبة التحميم (Superheat)</h2>
-            <p>أدخل القيم لمعرفة ما إذا كان النظام سليماً:</p>
-            <label>درجة حرارة أنبوب السحب (°C):</label>
-            <input type="number" id="suctionTemp" placeholder="مثال: 12">
-            
-            <label>درجة حرارة التشبع (من جدول الغاز حسب الضغط) (°C):</label>
-            <input type="number" id="satTemp" placeholder="مثال: 5">
-            
-            <button onclick="calculateSuperheat()">احسب الآن</button>
-            <div id="calcResult" class="result-box"></div>
-        </section>
-    </main>
-
-    <script src="script.js"></script>
-</body>
-</html>
+    <label>درجة حرارة أنبوب السحب الفعلية (°C):</label>
+    <input type="number" id="suctionTemp" placeholder="مثال: 12">
+    
+    <button onclick="calculateSuperheatSmart()">احسب التشخيص</button>
+    <div id="calcResult" class="result-box"></div>
+</section>
