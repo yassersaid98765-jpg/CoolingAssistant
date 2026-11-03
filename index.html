@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساعد التبريد الذكي</title>
     <style>
-        /* كود التصميم هنا */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0f172a;
@@ -23,7 +22,7 @@
             padding: 20px;
             margin-bottom: 20px;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             box-sizing: border-box;
         }
@@ -42,6 +41,30 @@
         .flex-row { display: flex; gap: 10px; }
         .flex-row input { flex: 2; margin-bottom: 0; }
         .flex-row select { flex: 1; margin-bottom: 0; }
+
+        /* تنسيقات الدورة التفاعلية */
+        .cycle-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .component-btn {
+            background-color: #0f172a;
+            border: 2px solid #475569;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            width: 45%;
+            transition: 0.3s;
+            color: white;
+        }
+        .component-btn:hover { border-color: #38bdf8; background-color: #1e293b; }
+        .component-btn.active { border-color: #38bdf8; background-color: #0c4a6e; }
+        .component-btn .icon { font-size: 2rem; display: block; margin-bottom: 5px; }
+        .component-btn .name { font-size: 0.9rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -50,10 +73,36 @@
     </header>
 
     <main>
-        <!-- قسم تشخيص الأعطال -->
+        <!-- 1. قسم الدورة التفاعلية (جديد) -->
+        <section class="card">
+            <h2>🔄 دورة التبريد التفاعلية</h2>
+            <p style="font-size: 0.9rem; color:#cbd5e1;">اضغط على أي مكون لمعرفة وظيفته وأعطاله الشائعة:</p>
+            
+            <div class="cycle-container">
+                <div class="component-btn" onclick="showComponent('compressor', this)">
+                    <span class="icon">⚙️</span>
+                    <span class="name">الضاغط</span>
+                </div>
+                <div class="component-btn" onclick="showComponent('condenser', this)">
+                    <span class="icon">🌬️</span>
+                    <span class="name">المكثف</span>
+                </div>
+                <div class="component-btn" onclick="showComponent('expansion', this)">
+                    <span class="icon">💧</span>
+                    <span class="name">صمام التمدد</span>
+                </div>
+                <div class="component-btn" onclick="showComponent('evaporator', this)">
+                    <span class="icon">❄️</span>
+                    <span class="name">المبخر</span>
+                </div>
+            </div>
+            
+            <div id="componentInfo" class="result-box"></div>
+        </section>
+
+        <!-- 2. قسم تشخيص الأعطال -->
         <section class="card">
             <h2>🛠️ تشخيص سريع</h2>
-            <p>اختر العَرَض الذي تواجهه:</p>
             <select id="symptomSelect">
                 <option value="">-- اختر العَرَض --</option>
                 <option value="frost">صقيع (ثلج) على أنابيب المبخر</option>
@@ -64,7 +113,7 @@
             <div id="diagnosisResult" class="result-box"></div>
         </section>
 
-        <!-- قسم الحاسبة -->
+        <!-- 3. قسم الحاسبة -->
         <section class="card">
             <h2>🧮 حاسبة التحميم الذكية</h2>
             <label>نوع الغاز:</label>
@@ -92,7 +141,61 @@
     </main>
 
     <script>
-        // --- كود البرمجة هنا ---
+        // ==========================================
+        // 1. بيانات الدورة التفاعلية
+        // ==========================================
+        const cycleData = {
+            compressor: {
+                title: "⚙️ الضاغط (Compressor)",
+                func: "يقوم بضغط غاز التبريد ورفع درجة حرارته وضغطه ليدفع الدورة للأمام. هو 'قلب' النظام.",
+                faults: ["ارتفاع صوت أو اهتزاز غير طبيعي.", "الضاغط لا يبدأ (مشكلة كهربائية).", "انخفاض كفاءة الضغط."],
+                readings: "إذا كان ضعيفاً: ضغط الطرد (High) منخفض، وضغط السحب (Low) مرتفع."
+            },
+            condenser: {
+                title: "🌬️ المكثف (Condenser)",
+                func: "يستقبل الغاز الساخن عالي الضغط من الضاغط، ويطرد الحرارة للخارج ليتحول الغاز إلى سائل.",
+                faults: ["اتساخ الزعانف الخارجية.", "تلف مروحة التبريد.", "انسداد في الممرات."],
+                readings: "إذا كان متسخاً: يرتفع ضغط الطرد (High Pressure) بشكل ملحوظ."
+            },
+            expansion: {
+                title: "💧 صمام التمدد (Expansion Valve)",
+                func: "يخفض ضغط السائل القادم من المكثف ويحوله إلى رذاذ بارد، ليدخل المبخر.",
+                faults: ["انسداد بالشوائب أو الثلج.", "تجمّد الصمام (Stuck).", "ضبط خاطئ للتحميم."],
+                readings: "إذا انسد: ينخفض ضغط السحب (Low) بشدة، ويرتفع التحميم (Superheat)."
+            },
+            evaporator: {
+                title: "❄️ المبخر (Evaporator)",
+                func: "يتبخر السائل البارد فيه، ممتصاً الحرارة من الغرفة (الهواء الدافئ)، ليبرد المكان.",
+                faults: ["تجمد المبخر بسبب نقص غاز.", "اتساخ الفلتر الداخلي.", "ضعف تدفق الهواء الداخلي."],
+                readings: "إذا كان متجمداً: ضغط السحب (Low) منخفض، وتدفق الهواء ضعيف."
+            }
+        };
+
+        function showComponent(key, element) {
+            // إزالة التفعيل من جميع الأزرار
+            document.querySelectorAll('.component-btn').forEach(btn => btn.classList.remove('active'));
+            // تفعيل الزر المضغوط
+            element.classList.add('active');
+
+            const data = cycleData[key];
+            const infoBox = document.getElementById('componentInfo');
+            
+            infoBox.style.display = 'block';
+            infoBox.style.borderRight = "5px solid #38bdf8";
+            infoBox.innerHTML = `
+                <h3>${data.title}</h3>
+                <p><strong>الوظيفة:</strong> ${data.func}</p>
+                <p><strong>الأعطال الشائعة:</strong></p>
+                <ul>${data.faults.map(f => `<li>${f}</li>`).join('')}</ul>
+                <p style="background: #0f172a; padding: 10px; border-radius: 5px; font-size: 0.9rem;">
+                    <strong>📊 تأثير العطل على القراءات:</strong><br>${data.readings}
+                </p>
+            `;
+        }
+
+        // ==========================================
+        // 2. بيانات الأعطال (السابقة)
+        // ==========================================
         const faultDatabase = {
             frost: { title: "❄️ صقيع على الأنابيب", causes: ["نقص في غاز التبريد.", "انسداد في صمام التمدد.", "ضعف في تدفق الهواء (فلتر متسخ)."] },
             lowCooling: { title: "📉 تبريد ضعيف", causes: ["تسرب في الغاز.", "المكثف متسخ جداً.", "الضاغط ضعيف."] },
@@ -105,10 +208,14 @@
             const box = document.getElementById('diagnosisResult');
             if (val && faultDatabase[val]) {
                 box.style.display = 'block';
+                box.style.borderRight = "5px solid #f59e0b";
                 box.innerHTML = `<h3>${faultDatabase[val].title}</h3><ul>${faultDatabase[val].causes.map(c => `<li>${c}</li>`).join('')}</ul>`;
             } else { box.style.display = 'none'; }
         });
 
+        // ==========================================
+        // 3. جداول الضغوط والحاسبة (السابقة)
+        // ==========================================
         const ptCharts = {
             "R410a": [{bar: 4.0, temp: -10}, {bar: 5.0, temp: -5}, {bar: 6.0, temp: 0}, {bar: 7.0, temp: 4}, {bar: 8.0, temp: 8}, {bar: 9.0, temp: 11}, {bar: 10.0, temp: 15}, {bar: 11.0, temp: 18}, {bar: 12.0, temp: 21}, {bar: 13.0, temp: 24}, {bar: 14.0, temp: 27}, {bar: 15.0, temp: 29}],
             "R32": [{bar: 4.0, temp: -12}, {bar: 5.0, temp: -6}, {bar: 6.0, temp: -1}, {bar: 7.0, temp: 3}, {bar: 8.0, temp: 7}, {bar: 9.0, temp: 11}, {bar: 10.0, temp: 14}, {bar: 11.0, temp: 17}, {bar: 12.0, temp: 20}, {bar: 13.0, temp: 23}, {bar: 14.0, temp: 26}, {bar: 15.0, temp: 28}],
