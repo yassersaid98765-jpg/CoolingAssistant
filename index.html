@@ -1,26 +1,172 @@
-<!-- قسم الحاسبة المطورة -->
-<section class="card">
-    <h2>🧮 حاسبة التحميم الذكية</h2>
-    
-    <label>نوع الغاز:</label>
-    <select id="gasType" onchange="updatePressureUnits()">
-        <option value="R410a">R410a (المكيفات الحديثة)</option>
-        <option value="R32">R32 (المكيفات الجديدة)</option>
-        <option value="R22">R22 (القديم)</option>
-    </select>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مساعد التبريد الذكي</title>
+    <style>
+        /* كود التصميم هنا */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header h1 { color: #38bdf8; text-align: center; }
+        .card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+        }
+        h2 { font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 10px; color: #94a3b8; }
+        select, input, button {
+            width: 100%; padding: 10px; margin-top: 10px; margin-bottom: 15px;
+            border-radius: 8px; border: 1px solid #475569; background-color: #0f172a;
+            color: white; font-size: 1rem; box-sizing: border-box;
+        }
+        button { background-color: #0284c7; cursor: pointer; font-weight: bold; border: none; transition: 0.3s; }
+        button:hover { background-color: #0369a1; }
+        .result-box {
+            margin-top: 15px; padding: 15px; border-radius: 8px;
+            background-color: #334155; display: none; line-height: 1.6;
+        }
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row input { flex: 2; margin-bottom: 0; }
+        .flex-row select { flex: 1; margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>❄️ مساعد التبريد والتكييف</h1>
+    </header>
 
-    <label>ضغط السحب (Suction Pressure):</label>
-    <div style="display: flex; gap: 10px;">
-        <input type="number" id="pressureValue" placeholder="أدخل الضغط" style="flex: 2;">
-        <select id="pressureUnit" style="flex: 1;">
-            <option value="bar">Bar</option>
-            <option value="psi">PSI</option>
-        </select>
-    </div>
+    <main>
+        <!-- قسم تشخيص الأعطال -->
+        <section class="card">
+            <h2>🛠️ تشخيص سريع</h2>
+            <p>اختر العَرَض الذي تواجهه:</p>
+            <select id="symptomSelect">
+                <option value="">-- اختر العَرَض --</option>
+                <option value="frost">صقيع (ثلج) على أنابيب المبخر</option>
+                <option value="lowCooling">تبريد ضعيف جداً</option>
+                <option value="highPressure">ضغط الطرد (High) مرتفع جداً</option>
+                <option value="compressorOff">الضاغط لا يعمل</option>
+            </select>
+            <div id="diagnosisResult" class="result-box"></div>
+        </section>
 
-    <label>درجة حرارة أنبوب السحب الفعلية (°C):</label>
-    <input type="number" id="suctionTemp" placeholder="مثال: 12">
-    
-    <button onclick="calculateSuperheatSmart()">احسب التشخيص</button>
-    <div id="calcResult" class="result-box"></div>
-</section>
+        <!-- قسم الحاسبة -->
+        <section class="card">
+            <h2>🧮 حاسبة التحميم الذكية</h2>
+            <label>نوع الغاز:</label>
+            <select id="gasType">
+                <option value="R410a">R410a (المكيفات الحديثة)</option>
+                <option value="R32">R32 (المكيفات الجديدة)</option>
+                <option value="R22">R22 (القديم)</option>
+            </select>
+
+            <label>ضغط السحب (Suction Pressure):</label>
+            <div class="flex-row">
+                <input type="number" id="pressureValue" placeholder="أدخل الضغط">
+                <select id="pressureUnit">
+                    <option value="bar">Bar</option>
+                    <option value="psi">PSI</option>
+                </select>
+            </div>
+
+            <label>درجة حرارة أنبوب السحب الفعلية (°C):</label>
+            <input type="number" id="suctionTemp" placeholder="مثال: 12">
+            
+            <button onclick="calculateSuperheatSmart()">احسب التشخيص</button>
+            <div id="calcResult" class="result-box"></div>
+        </section>
+    </main>
+
+    <script>
+        // --- كود البرمجة هنا ---
+        const faultDatabase = {
+            frost: { title: "❄️ صقيع على الأنابيب", causes: ["نقص في غاز التبريد.", "انسداد في صمام التمدد.", "ضعف في تدفق الهواء (فلتر متسخ)."] },
+            lowCooling: { title: "📉 تبريد ضعيف", causes: ["تسرب في الغاز.", "المكثف متسخ جداً.", "الضاغط ضعيف."] },
+            highPressure: { title: "🌡️ ضغط طرد مرتفع", causes: ["عدم كفاية تبريد المكثف.", "وجود هواء في الدورة.", "شحن زائد للغاز."] },
+            compressorOff: { title: "🔇 الضاغط لا يعمل", causes: ["مشكلة في الكهرباء (كابستور/أوفرلود).", "أجهزة الحماية فصلت.", "الضاغط تالف."] }
+        };
+
+        document.getElementById('symptomSelect').addEventListener('change', function() {
+            const val = this.value;
+            const box = document.getElementById('diagnosisResult');
+            if (val && faultDatabase[val]) {
+                box.style.display = 'block';
+                box.innerHTML = `<h3>${faultDatabase[val].title}</h3><ul>${faultDatabase[val].causes.map(c => `<li>${c}</li>`).join('')}</ul>`;
+            } else { box.style.display = 'none'; }
+        });
+
+        const ptCharts = {
+            "R410a": [{bar: 4.0, temp: -10}, {bar: 5.0, temp: -5}, {bar: 6.0, temp: 0}, {bar: 7.0, temp: 4}, {bar: 8.0, temp: 8}, {bar: 9.0, temp: 11}, {bar: 10.0, temp: 15}, {bar: 11.0, temp: 18}, {bar: 12.0, temp: 21}, {bar: 13.0, temp: 24}, {bar: 14.0, temp: 27}, {bar: 15.0, temp: 29}],
+            "R32": [{bar: 4.0, temp: -12}, {bar: 5.0, temp: -6}, {bar: 6.0, temp: -1}, {bar: 7.0, temp: 3}, {bar: 8.0, temp: 7}, {bar: 9.0, temp: 11}, {bar: 10.0, temp: 14}, {bar: 11.0, temp: 17}, {bar: 12.0, temp: 20}, {bar: 13.0, temp: 23}, {bar: 14.0, temp: 26}, {bar: 15.0, temp: 28}],
+            "R22": [{bar: 3.0, temp: -10}, {bar: 4.0, temp: -1}, {bar: 5.0, temp: 5}, {bar: 6.0, temp: 9}, {bar: 7.0, temp: 13}, {bar: 8.0, temp: 17}, {bar: 9.0, temp: 20}, {bar: 10.0, temp: 23}, {bar: 11.0, temp: 25}, {bar: 12.0, temp: 28}, {bar: 13.0, temp: 30}]
+        };
+
+        function getSatTemp(gas, pressureBar) {
+            const chart = ptCharts[gas];
+            if (pressureBar <= chart[0].bar) return chart[0].temp;
+            if (pressureBar >= chart[chart.length - 1].bar) return chart[chart.length - 1].temp;
+            for (let i = 0; i < chart.length - 1; i++) {
+                if (pressureBar >= chart[i].bar && pressureBar <= chart[i+1].bar) {
+                    const p1 = chart[i].bar, p2 = chart[i+1].bar, t1 = chart[i].temp, t2 = chart[i+1].temp;
+                    return t1 + ((pressureBar - p1) / (p2 - p1)) * (t2 - t1);
+                }
+            }
+            return 0;
+        }
+
+        function calculateSuperheatSmart() {
+            const gas = document.getElementById('gasType').value;
+            let pressure = parseFloat(document.getElementById('pressureValue').value);
+            const unit = document.getElementById('pressureUnit').value;
+            const suctionTemp = parseFloat(document.getElementById('suctionTemp').value);
+            const res = document.getElementById('calcResult');
+
+            if (isNaN(pressure) || isNaN(suctionTemp)) {
+                res.style.display = 'block'; res.style.borderRight = "5px solid #f59e0b";
+                res.innerHTML = "⚠️ يرجى إدخال أرقام صحيحة."; return;
+            }
+
+            if (unit === 'psi') pressure = pressure / 14.5038;
+
+            const satTemp = getSatTemp(gas, pressure);
+            const superheat = suctionTemp - satTemp;
+            let color = "", status = "", advice = "";
+
+            if (superheat < 4) {
+                color = "#f59e0b"; status = "⚠️ التحميم منخفض جداً";
+                advice = "شحن زائد للغاز، أو صمام التمدد مفتوح كثيراً.";
+            } else if (superheat >= 4 && superheat <= 12) {
+                color = "#10b981"; status = "✅ التحميم ممتاز";
+                advice = "النظام يعمل بكفاءة طبيعية.";
+            } else {
+                color = "#ef4444"; status = "❌ التحميم مرتفع جداً";
+                advice = "نقص في الغاز، أو انسداد، أو ضعف تدفق الهواء.";
+            }
+
+            res.style.display = 'block';
+            res.style.borderRight = `5px solid ${color}`;
+            res.innerHTML = `
+                <p><strong>الغاز:</strong> ${gas} | <strong>الضغط:</strong> ${pressure.toFixed(2)} Bar</p>
+                <p><strong>حرارة التشبع:</strong> ${satTemp.toFixed(1)} °C</p>
+                <hr style="border-color: #475569; margin: 10px 0;">
+                <p><strong>التحميم:</strong> <span style="color:${color}; font-weight:bold;">${superheat.toFixed(1)} °C</span></p>
+                <p>${status}</p><p style="font-size:0.9rem;">💡 ${advice}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
